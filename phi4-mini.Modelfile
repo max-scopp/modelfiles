@@ -1,6 +1,7 @@
-FROM qwen3.5:4b-q8_0
+FROM phi4-mini
 
-PARAMETER num_ctx 16384
+# 48K-64K Context Window (Managed by q4_0 KV cache backend)
+PARAMETER num_ctx 49152
 PARAMETER num_predict 2048
 PARAMETER temperature 0.1
 PARAMETER top_p 0.9

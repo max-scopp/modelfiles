@@ -1,0 +1,14 @@
+FROM qwen3.5:4b-q8_0
+
+# 128K Context Window configuration
+PARAMETER num_ctx 131072
+PARAMETER num_predict 4096
+PARAMETER temperature 0.1
+PARAMETER top_p 0.9
+PARAMETER top_k 40
+PARAMETER repeat_penalty 1.05
+PARAMETER min_p 0.05
+
+# RoPE scaling for long context stability
+PARAMETER rope_scaling:type linear
+PARAMETER rope_scaling:factor 4.0

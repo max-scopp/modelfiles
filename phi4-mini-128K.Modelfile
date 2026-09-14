@@ -1,0 +1,10 @@
+FROM phi4-mini
+
+# Full 128K Context Window (Backed by OLLAMA_KV_CACHE_TYPE=q4_0)
+PARAMETER num_ctx 131072
+PARAMETER num_predict 4096
+PARAMETER temperature 0.1
+PARAMETER top_p 0.9
+PARAMETER top_k 40
+PARAMETER repeat_penalty 1.05
+PARAMETER min_p 0.05
