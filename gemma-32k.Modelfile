@@ -5,11 +5,7 @@ PARAMETER num_predict -1
 PARAMETER temperature 0.7
 PARAMETER top_p 0.9
 
-# Explicitly enable reasoning parsing for API streaming
-PARAMETER num_predict 4096
-
-PARAMETER stop "<|channel|>"
-PARAMETER stop "<channel|>"
+# Keep only the safe standard turn boundaries as stop tokens
 PARAMETER stop "<|im_end|>"
 PARAMETER stop "<|end_of_turn|>"
 PARAMETER stop "<start_of_turn>"
