@@ -21,7 +21,7 @@ for f in *.Modelfile *.modelfile; do
   MODEL_NAME="${f%.*}"
   REPO_MODELS["$MODEL_NAME"]=1
 
-  echo "Building Ollama model: $MODEL_NAME from $f..."
+  echo "Building Ollacommit and pusha model: $MODEL_NAME from $f..."
   ollama create "$MODEL_NAME" -f "$f"
 done
 
@@ -37,9 +37,9 @@ for model in "${INSTALLED_MODELS[@]}"; do
     continue
   fi
 
-  # If it doesn't match any local Modelfile, check if it's a base image (contains a slash or is a raw foundation tag)
+  # If it doesn't match any local Modelfile, check if it's a base image (contains a slash)
   # Otherwise, treat as a stale custom model and remove it
-  if [[ "$model" != *"/"* && "$model" != "gemma"* ]]; then
+  if [[ "$model" != *"/"* ]]; then
     echo "Deleting stale custom model: $model"
     ollama rm "$model"
   fi

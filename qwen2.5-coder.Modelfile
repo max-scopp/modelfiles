@@ -1,9 +1,0 @@
-FROM qwen2.5-coder:7b
-
-PARAMETER num_ctx 49152
-PARAMETER temperature 0.2
-PARAMETER top_p 0.85
-PARAMETER repeat_penalty 1.05
-
-PARAMETER stop "<|im_end|>"
-PARAMETER stop "<|end_of_turn|>"
