@@ -6,8 +6,7 @@ PARAMETER num_predict -1
 PARAMETER temperature 0.7
 PARAMETER top_p 0.9
 
-PARAMETER stop "<|channel|>"
-PARAMETER stop "<channel|>"
+# Keep only valid turn boundaries (remove channel stops)
 PARAMETER stop "<|im_end|>"
 PARAMETER stop "<|end_of_turn|>"
 PARAMETER stop "<start_of_turn>"

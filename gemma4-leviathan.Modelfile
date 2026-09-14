@@ -6,7 +6,5 @@ PARAMETER temperature 0.2
 PARAMETER top_p 0.85
 PARAMETER repeat_penalty 1.05
 
-PARAMETER stop "<|channel|>"
-PARAMETER stop "<channel|>"
 PARAMETER stop "<|im_end|>"
 PARAMETER stop "<|end_of_turn|>"
