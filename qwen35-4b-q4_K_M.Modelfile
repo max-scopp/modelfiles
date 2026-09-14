@@ -1,7 +1,6 @@
-FROM phi4-mini
+FROM qwen3.5:4b-q4_K_M
 
-# Full 128K Context Window (Backed by OLLAMA_KV_CACHE_TYPE=q4_0)
-PARAMETER num_ctx 131072
+PARAMETER num_ctx 65536
 PARAMETER num_predict 4096
 PARAMETER temperature 0.1
 PARAMETER top_p 0.9

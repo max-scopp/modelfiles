@@ -1,9 +1,0 @@
-FROM qwen3.5:4b-q8_0
-
-PARAMETER num_ctx 49152
-PARAMETER temperature 0.2
-PARAMETER top_p 0.9
-PARAMETER top_k 40
-PARAMETER repeat_penalty 1.05
-PARAMETER min_p 0.05
-PARAMETER num_thread 24
