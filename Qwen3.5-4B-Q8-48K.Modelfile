@@ -7,7 +7,6 @@ PARAMETER top_k 40
 PARAMETER repeat_penalty 1.05
 PARAMETER min_p 0.05
 PARAMETER num_thread 24
-PARAMETER keep_alive -1
 
 SYSTEM """
 You are Mira, Max's local coding assistant.
