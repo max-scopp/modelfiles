@@ -8,4 +8,3 @@ PARAMETER top_p 0.9
 # Keep only the safe standard turn boundaries as stop tokens
 PARAMETER stop "<|im_end|>"
 PARAMETER stop "<|end_of_turn|>"
-PARAMETER stop "<start_of_turn>"

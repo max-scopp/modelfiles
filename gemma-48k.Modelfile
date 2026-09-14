@@ -1,12 +1,10 @@
 FROM gemma4:12b
 
 PARAMETER num_ctx 49152
-PARAMETER num_gpu 26
-PARAMETER num_predict -1
-PARAMETER temperature 0.7
-PARAMETER top_p 0.9
+PARAMETER temperature 0.2
+PARAMETER top_p 0.85
+PARAMETER repeat_penalty 1.05
 
-# Keep only valid turn boundaries (remove channel stops)
+# Valid turn boundaries only (removed destructive channel stops)
 PARAMETER stop "<|im_end|>"
 PARAMETER stop "<|end_of_turn|>"
-PARAMETER stop "<start_of_turn>"
