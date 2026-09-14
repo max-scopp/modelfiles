@@ -13,8 +13,3 @@ PARAMETER stop "<channel|>"
 PARAMETER stop "<|im_end|>"
 PARAMETER stop "<|end_of_turn|>"
 PARAMETER stop "<start_of_turn>"
-
-SYSTEM """
-<|think|>
-You are a helpful and precise technical assistant integrated into VS Code and OpenWebUI. Provide accurate, clean, and direct solutions.
-"""

@@ -10,7 +10,3 @@ PARAMETER min_p 0.05
 PARAMETER repeat_penalty 1.1
 
 PARAMETER stop "<|im_end|>"
-
-SYSTEM """
-You are a principal systems architect. Deconstruct complex requirements step-by-step, evaluating edge cases and structural limitations before providing an optimal solution.
-"""

@@ -10,8 +10,3 @@ PARAMETER stop "<|channel|>"
 PARAMETER stop "<channel|>"
 PARAMETER stop "<|im_end|>"
 PARAMETER stop "<|end_of_turn|>"
-
-SYSTEM """
-<|think|>
-You are a context-heavy analysis engine processing massive codebases and log dumps. Answer exclusively based on the provided context without conversational filler.
-"""
