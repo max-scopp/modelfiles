@@ -2,6 +2,7 @@ FROM gemma4:12b
 
 # Extended context window configuration
 PARAMETER num_ctx 65536
+PARAMETER num_gpu 20
 PARAMETER num_predict -1
 
 # Sampling parameters
