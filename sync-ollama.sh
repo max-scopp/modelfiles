@@ -4,62 +4,79 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
 
-# 1. Pull latest repository state
+echo "==> Repository: $REPO_DIR"
+
+# Pull latest repo
 if [ -d ".git" ]; then
     git pull --ff-only origin main
 fi
 
 declare -A REPO_MODELS=()
 
-# 2. Find every Modelfile in the repository
-shopt -s nullglob
-MODEL_FILES=( *.Modelfile *.modelfile )
-
-for f in "${MODEL_FILES[@]}"; do
-    [ -f "$f" ] || continue
-
-    # gemma-64k.Modelfile -> gemma-64k
-    MODEL_NAME="${f%.*}"
-
-    REPO_MODELS["$MODEL_NAME"]=1
-
-    echo "==> Building $MODEL_NAME from $f"
-    ollama create "$MODEL_NAME" -f "$f"
-done
-
-# 3. Get every installed Ollama model
-mapfile -t INSTALLED_MODELS < <(
-    ollama list | awk 'NR > 1 { print $1 }'
+# Find Modelfiles in the repo root
+while IFS= read -r -d '' file; do
+    filename="$(basename "$file")"
+    model="${filename%.*}"
+    REPO_MODELS["$model"]=1
+done < <(
+    find "$REPO_DIR" -maxdepth 1 -type f \
+        \( -name '*.Modelfile' -o -name '*.modelfile' \) \
+        -print0
 )
 
-# 4. Delete EVERYTHING that isn't represented by a Modelfile
+echo
+echo "==> Models defined by repository:"
+if [ "${#REPO_MODELS[@]}" -eq 0 ]; then
+    echo "    NONE"
+else
+    for model in "${!REPO_MODELS[@]}"; do
+        echo "    $model"
+    done
+fi
+
+# Build/update repo models
+for model in "${!REPO_MODELS[@]}"; do
+    file="$REPO_DIR/$model.Modelfile"
+
+    # Handle lowercase extension
+    if [ ! -f "$file" ]; then
+        file="$REPO_DIR/$model.modelfile"
+    fi
+
+    echo
+    echo "==> Building $model"
+    ollama create "$model" -f "$file"
+done
+
+# Get installed models
+mapfile -t INSTALLED_MODELS < <(
+    ollama list | tail -n +2 | awk '{print $1}'
+)
+
+echo
+echo "==> Installed models:"
+printf '    %s\n' "${INSTALLED_MODELS[@]}"
+
+# Delete anything not in repository
 for installed in "${INSTALLED_MODELS[@]}"; do
 
-    # ollama list gives e.g.:
-    # gemma-64k:latest
+    # ollama list:
+    #   gemma-48k:latest
+    #   gemma4:12b
     #
-    # Repository gives:
-    # gemma-64k
+    # Repo:
+    #   gemma-48k
     #
-    # Strip tag for exact repository comparison.
-    BASE_NAME="${installed%%:*}"
+    base="${installed%%:*}"
 
-    if [[ -n "${REPO_MODELS[$BASE_NAME]:-}" ]]; then
-        echo "==> Keeping $installed"
+    if [[ "${REPO_MODELS[$base]+exists}" ]]; then
+        echo "==> KEEP   $installed"
     else
-        echo "==> Removing $installed"
+        echo "==> DELETE $installed"
         ollama rm "$installed"
     fi
 done
 
 echo
-echo "==> Ollama sync complete."
-echo
-echo "Repository models:"
-for model in "${!REPO_MODELS[@]}"; do
-    echo "  $model"
-done
-
-echo
-echo "Installed models:"
+echo "==> Final state:"
 ollama list
