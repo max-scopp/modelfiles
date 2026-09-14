@@ -4,20 +4,35 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
 
-echo "==> Repository: $REPO_DIR"
+echo "==> Syncing Ollama models from: $REPO_DIR"
 
-# Pull latest repo
-if [ -d ".git" ]; then
+# Pull latest repository state
+if [[ -d ".git" ]]; then
     git pull --ff-only origin main
 fi
 
+# ---------------------------------------------------------------------------
+# Discover repository models
+# ---------------------------------------------------------------------------
+
 declare -A REPO_MODELS=()
 
-# Find Modelfiles in the repo root
 while IFS= read -r -d '' file; do
     filename="$(basename "$file")"
-    model="${filename%.*}"
-    REPO_MODELS["$model"]=1
+
+    case "$filename" in
+        *.Modelfile)
+            model="${filename%.Modelfile}"
+            ;;
+        *.modelfile)
+            model="${filename%.modelfile}"
+            ;;
+        *)
+            continue
+            ;;
+    esac
+
+    REPO_MODELS["$model"]="$file"
 done < <(
     find "$REPO_DIR" -maxdepth 1 -type f \
         \( -name '*.Modelfile' -o -name '*.modelfile' \) \
@@ -25,58 +40,63 @@ done < <(
 )
 
 echo
-echo "==> Models defined by repository:"
-if [ "${#REPO_MODELS[@]}" -eq 0 ]; then
-    echo "    NONE"
-else
-    for model in "${!REPO_MODELS[@]}"; do
+echo "==> Repository defines ${#REPO_MODELS[@]} model(s):"
+
+if [[ ${#REPO_MODELS[@]} -gt 0 ]]; then
+    while IFS= read -r model; do
         echo "    $model"
-    done
+    done < <(printf '%s\n' "${!REPO_MODELS[@]}" | sort)
+else
+    echo "    NONE"
 fi
 
-# Build/update repo models
-for model in "${!REPO_MODELS[@]}"; do
-    file="$REPO_DIR/$model.Modelfile"
+# ---------------------------------------------------------------------------
+# Build repository models
+# ---------------------------------------------------------------------------
 
-    # Handle lowercase extension
-    if [ ! -f "$file" ]; then
-        file="$REPO_DIR/$model.modelfile"
-    fi
+for model in "${!REPO_MODELS[@]}"; do
+    file="${REPO_MODELS[$model]}"
 
     echo
-    echo "==> Building $model"
+    echo "==> BUILD $model"
     ollama create "$model" -f "$file"
 done
 
-# Get installed models
-mapfile -t INSTALLED_MODELS < <(
-    ollama list | tail -n +2 | awk '{print $1}'
-)
+# ---------------------------------------------------------------------------
+# Remove EVERYTHING not defined by the repository
+# ---------------------------------------------------------------------------
 
 echo
-echo "==> Installed models:"
-printf '    %s\n' "${INSTALLED_MODELS[@]}"
+echo "==> Synchronizing installed models..."
 
-# Delete anything not in repository
-for installed in "${INSTALLED_MODELS[@]}"; do
+while IFS= read -r installed; do
+    [[ -n "$installed" ]] || continue
 
-    # ollama list:
-    #   gemma-48k:latest
-    #   gemma4:12b
+    # Ollama reports:
+    #   model:latest
+    #   model:tag
     #
-    # Repo:
-    #   gemma-48k
-    #
+    # Repository model names are untagged.
     base="${installed%%:*}"
 
-    if [[ "${REPO_MODELS[$base]+exists}" ]]; then
-        echo "==> KEEP   $installed"
+    if [[ -v "REPO_MODELS[$base]" ]]; then
+        echo "    KEEP   $installed"
     else
-        echo "==> DELETE $installed"
+        echo "    NUKE   $installed"
         ollama rm "$installed"
     fi
-done
+done < <(
+    ollama list |
+        awk 'NR > 1 && NF { print $1 }'
+)
+
+# ---------------------------------------------------------------------------
+# Verify final state
+# ---------------------------------------------------------------------------
 
 echo
-echo "==> Final state:"
+echo "==> Final Ollama models:"
 ollama list
+
+echo
+echo "==> Ollama sync complete."
