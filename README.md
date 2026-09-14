@@ -147,6 +147,5 @@ systemctl enable --now ollama-webhook
 Send an HTTP POST or GET request to port `9000` to execute the sync pipeline manually or via GitHub Webhook:
 
 ```bash
-curl [http://192.168.2.127:9000/hooks/ollama-sync](http://192.168.2.127:9000/hooks/ollama-sync)
-
+curl http://192.168.2.127:9000/hooks/ollama-sync
 ```
