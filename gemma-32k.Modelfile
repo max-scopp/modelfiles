@@ -1,4 +1,4 @@
-FROM gemma:latest
+FROM gemma4:12b
 PARAMETER num_ctx 32768
 TEMPLATE """{{ if .System }}<|im_start|>system
 {{ .System }}<|im_end|>
