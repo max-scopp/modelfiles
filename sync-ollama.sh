@@ -5,44 +5,74 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
 
-# 1. Pull latest changes if inside a git tracking repository
+STATE_FILE="$REPO_DIR/.ollama-managed-models"
+
+echo "==> Syncing repository..."
+
+# 1. Pull latest changes
 if [ -d ".git" ]; then
-  git pull origin main
+    git pull --ff-only origin main
 fi
 
-declare -A REPO_MODELS
+declare -A REPO_MODELS=()
+declare -A OLD_MODELS=()
 
-# 2. Iterate dynamically over all *.Modelfile files
+# 2. Load previously managed models
+if [ -f "$STATE_FILE" ]; then
+    while IFS= read -r model; do
+        [ -n "$model" ] && OLD_MODELS["$model"]=1
+    done < "$STATE_FILE"
+fi
+
+# 3. Discover current Modelfiles
 shopt -s nullglob
-for f in *.Modelfile *.modelfile; do
-  [ -e "$f" ] || continue
-  
-  # Extract model tag name (e.g., gemma-32k.Modelfile -> gemma-32k)
-  MODEL_NAME="${f%.*}"
-  REPO_MODELS["$MODEL_NAME"]=1
+MODEL_FILES=( *.Modelfile *.modelfile )
 
-  echo "Building Ollacommit and pusha model: $MODEL_NAME from $f..."
-  ollama create "$MODEL_NAME" -f "$f"
+if [ ${#MODEL_FILES[@]} -eq 0 ]; then
+    echo "WARNING: No Modelfiles found."
+fi
+
+for f in "${MODEL_FILES[@]}"; do
+    [ -f "$f" ] || continue
+
+    # gemma-64k.Modelfile -> gemma-64k
+    MODEL_NAME="${f%.*}"
+
+    REPO_MODELS["$MODEL_NAME"]=1
+
+    echo
+    echo "==> Building: $MODEL_NAME"
+    echo "    Source: $f"
+
+    ollama create "$MODEL_NAME" -f "$f"
 done
 
-# 3. Clean up deleted / stale custom models dynamically
-mapfile -t INSTALLED_MODELS < <(ollama list | awk 'NR>1 {print $1}')
+# 4. Remove models that were previously managed but no longer have a Modelfile
+for model in "${!OLD_MODELS[@]}"; do
+    if [[ -z "${REPO_MODELS[$model]:-}" ]]; then
+        echo
+        echo "==> Removing deleted model: $model"
 
-for model in "${INSTALLED_MODELS[@]}"; do
-  # Normalize name by stripping any tag suffix for comparison
-  BASE_NAME="${model%%:*}"
-
-  # If the installed model has a local Modelfile matching it, keep it
-  if [[ -n "${REPO_MODELS[$BASE_NAME]:-}" || -n "${REPO_MODELS[$model]:-}" ]]; then
-    continue
-  fi
-
-  # If it doesn't match any local Modelfile, check if it's a base image (contains a slash)
-  # Otherwise, treat as a stale custom model and remove it
-  if [[ "$model" != *"/"* ]]; then
-    echo "Deleting stale custom model: $model"
-    ollama rm "$model"
-  fi
+        if ollama show "$model" >/dev/null 2>&1; then
+            ollama rm "$model"
+        else
+            echo "    Already absent."
+        fi
+    fi
 done
 
-echo "Ollama sync finished cleanly."
+# 5. Save current managed model list
+{
+    for model in "${!REPO_MODELS[@]}"; do
+        echo "$model"
+    done
+} | sort > "$STATE_FILE"
+
+echo
+echo "==> Ollama sync finished."
+echo
+echo "Managed models:"
+cat "$STATE_FILE"
+echo
+echo "Installed models:"
+ollama list
