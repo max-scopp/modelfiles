@@ -25,23 +25,22 @@ for f in *.Modelfile *.modelfile; do
   ollama create "$MODEL_NAME" -f "$f"
 done
 
-# 3. Clean up deleted / stale custom models
+# 3. Clean up deleted / stale custom models dynamically
 mapfile -t INSTALLED_MODELS < <(ollama list | awk 'NR>1 {print $1}')
 
 for model in "${INSTALLED_MODELS[@]}"; do
-  BASE_NAME="${model%:latest}"
-  
-  # Skip stock/base downloaded models
-  if [[ "$model" == *":"* && "$model" != *":latest" ]]; then
-    continue
-  fi
-  if [[ "$model" == "gemma"* || "$model" == "llama"* || "$model" == "qwen"* || "$model" == "mistral"* ]]; then
+  # Normalize name by stripping any tag suffix for comparison
+  BASE_NAME="${model%%:*}"
+
+  # If the installed model has a local Modelfile matching it, keep it
+  if [[ -n "${REPO_MODELS[$BASE_NAME]:-}" || -n "${REPO_MODELS[$model]:-}" ]]; then
     continue
   fi
 
-  # Remove models missing from Git
-  if [[ -z "${REPO_MODELS[$BASE_NAME]:-}" && -z "${REPO_MODELS[$model]:-}" ]]; then
-    echo "Deleting stale model: $model"
+  # If it doesn't match any local Modelfile, check if it's a base image (contains a slash or is a raw foundation tag)
+  # Otherwise, treat as a stale custom model and remove it
+  if [[ "$model" != *"/"* && "$model" != "gemma"* ]]; then
+    echo "Deleting stale custom model: $model"
     ollama rm "$model"
   fi
 done

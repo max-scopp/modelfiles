@@ -1,19 +1,17 @@
 FROM gemma4:12b
 
-# Max out context to the full 262k window.
-PARAMETER num_ctx 262144
-
-# Factual RAG parameters: low temperature and specific repeat penalty for stability.
+PARAMETER num_ctx 65536
+PARAMETER num_gpu 22
 PARAMETER temperature 0.2
 PARAMETER top_p 0.85
 PARAMETER repeat_penalty 1.05
 
-# Prevent channel token leakage natively.
 PARAMETER stop "<|channel|>"
 PARAMETER stop "<channel|>"
 PARAMETER stop "<|im_end|>"
 PARAMETER stop "<|end_of_turn|>"
 
 SYSTEM """
+<|think|>
 You are a context-heavy analysis engine processing massive codebases and log dumps. Answer exclusively based on the provided context without conversational filler.
 """
