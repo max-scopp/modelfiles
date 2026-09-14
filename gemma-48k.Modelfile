@@ -1,15 +1,12 @@
 FROM gemma4:12b
 
-# Extended context window configuration
-PARAMETER num_ctx 65536
-PARAMETER num_gpu 10
+PARAMETER num_ctx 49152
+PARAMETER num_gpu 20
 PARAMETER num_predict -1
 
-# Sampling parameters
 PARAMETER temperature 0.7
 PARAMETER top_p 0.9
 
-# Prune control sequence and channel token leaks
 PARAMETER stop "<|channel|>"
 PARAMETER stop "<channel|>"
 PARAMETER stop "<|im_end|>"
