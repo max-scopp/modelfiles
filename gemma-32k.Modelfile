@@ -1,8 +1,19 @@
 FROM gemma4:12b
+
+# Context window configuration
 PARAMETER num_ctx 32768
-TEMPLATE """{{ if .System }}<|im_start|>system
-{{ .System }}<|im_end|>
-{{ end }}{{ if .Prompt }}<|im_start|>user
-{{ .Prompt }}<|im_end|>
-{{ end }}<|im_start|>assistant
+
+# Sampling parameters for balanced creativity and precision
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+
+# Prune control sequence and channel token leaks
+PARAMETER stop "<|channel|>"
+PARAMETER stop "<channel|>"
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|end_of_turn|>"
+PARAMETER stop "<start_of_turn>"
+
+SYSTEM """
+You are a helpful and precise technical assistant integrated into VS Code and OpenWebUI. Provide accurate, clean, and direct solutions.
 """

@@ -1,0 +1,14 @@
+FROM qwen3-coder:latest
+
+PARAMETER num_ctx 32768
+
+# Strict coding parameters for structured output.
+PARAMETER temperature 0.1
+PARAMETER top_p 0.9
+PARAMETER repeat_penalty 1.05
+
+PARAMETER stop "<|im_end|>"
+
+SYSTEM """
+You are an expert software engineer. Output clean, efficient, and well-documented code natively. Exclude all conversational prose.
+"""
