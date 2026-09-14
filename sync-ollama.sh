@@ -6,18 +6,23 @@ cd "$REPO_DIR"
 
 echo "==> Syncing Ollama models from: $REPO_DIR"
 
-# Pull latest repository state
+# ---------------------------------------------------------------------------
+# 1. Update repository
+# ---------------------------------------------------------------------------
+
 if [[ -d ".git" ]]; then
     git pull --ff-only origin main
 fi
 
 # ---------------------------------------------------------------------------
-# Discover repository models
+# 2. Discover EXACTLY the Modelfiles tracked by Git
 # ---------------------------------------------------------------------------
 
 declare -A REPO_MODELS=()
 
-while IFS= read -r -d '' file; do
+while IFS= read -r file; do
+    [[ -n "$file" ]] || continue
+
     filename="$(basename "$file")"
 
     case "$filename" in
@@ -32,27 +37,22 @@ while IFS= read -r -d '' file; do
             ;;
     esac
 
-    REPO_MODELS["$model"]="$file"
+    REPO_MODELS["$model"]="$REPO_DIR/$file"
 done < <(
-    find "$REPO_DIR" -maxdepth 1 -type f \
-        \( -name '*.Modelfile' -o -name '*.modelfile' \) \
-        -print0
+    git ls-files -- '*.Modelfile' '*.modelfile'
 )
 
 echo
 echo "==> Repository defines ${#REPO_MODELS[@]} model(s):"
 
-if [[ ${#REPO_MODELS[@]} -gt 0 ]]; then
-    while IFS= read -r model; do
-        echo "    $model"
-    done < <(printf '%s\n' "${!REPO_MODELS[@]}" | sort)
-else
-    echo "    NONE"
-fi
+printf '%s\n' "${!REPO_MODELS[@]}" | sort | sed 's/^/    /'
 
 # ---------------------------------------------------------------------------
-# Build repository models
+# 3. BUILD EVERYTHING FIRST
 # ---------------------------------------------------------------------------
+
+echo
+echo "==> Building repository models..."
 
 for model in "${!REPO_MODELS[@]}"; do
     file="${REPO_MODELS[$model]}"
@@ -62,40 +62,39 @@ for model in "${!REPO_MODELS[@]}"; do
     ollama create "$model" -f "$file"
 done
 
+# If we got here, every model built successfully.
+echo
+echo "==> All repository models built successfully."
+
 # ---------------------------------------------------------------------------
-# Remove EVERYTHING not defined by the repository
+# 4. NUKE EVERYTHING NOT IN THE REPOSITORY
 # ---------------------------------------------------------------------------
 
 echo
-echo "==> Synchronizing installed models..."
+echo "==> Cleaning stale Ollama models..."
 
-while IFS= read -r installed; do
-    [[ -n "$installed" ]] || continue
-
-    # Ollama reports:
-    #   model:latest
-    #   model:tag
-    #
-    # Repository model names are untagged.
-    base="${installed%%:*}"
-
-    if [[ -v "REPO_MODELS[$base]" ]]; then
-        echo "    KEEP   $installed"
-    else
-        echo "    NUKE   $installed"
-        ollama rm "$installed"
-    fi
-done < <(
+mapfile -t INSTALLED < <(
     ollama list |
         awk 'NR > 1 && NF { print $1 }'
 )
 
+for installed in "${INSTALLED[@]}"; do
+    base="${installed%%:*}"
+
+    if [[ -v "REPO_MODELS[$base]" ]]; then
+        echo "    KEEP $installed"
+    else
+        echo "    NUKE $installed"
+        ollama rm "$installed"
+    fi
+done
+
 # ---------------------------------------------------------------------------
-# Verify final state
+# 5. Verify
 # ---------------------------------------------------------------------------
 
 echo
-echo "==> Final Ollama models:"
+echo "==> Final Ollama state:"
 ollama list
 
 echo

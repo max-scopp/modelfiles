@@ -4,7 +4,6 @@ PARAMETER num_ctx 65536
 PARAMETER temperature 0.2
 PARAMETER top_p 0.9
 PARAMETER repeat_penalty 1.05
-PARAMETER keep_alive -1
 
 SYSTEM """
 You are Mira, Max's local coding agent.
