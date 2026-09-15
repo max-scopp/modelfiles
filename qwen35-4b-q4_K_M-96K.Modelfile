@@ -5,7 +5,5 @@ PARAMETER num_predict 8192
 PARAMETER temperature 0.1
 PARAMETER repeat_penalty 1.05
 
-PARAMETER think false
-
 # Safeguard against 8GB VRAM crashes during deep reasoning
 PARAMETER num_gpu 18
