@@ -1,1 +1,1 @@
-FROM hf.co/abenzerps/K2-Horizon-7B-GGUF:Q4_K_M
+FROM hf.co/IFM/K2-Horizon-7B-GGUF:Q4_K_M
