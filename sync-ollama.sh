@@ -31,17 +31,16 @@ while IFS= read -r file; do
         *.Modelfile) model="${filename%.Modelfile}" ;;
         *.modelfile) model="${filename%.modelfile}" ;;
         *) continue ;;
-    endcase
+    esac
 
     full_path="$REPO_DIR/$file"
     REPO_MODELS["$model"]="$full_path"
-    # Simple cross-platform checksum
     REPO_HASHES["$model"]="$(sha256sum "$full_path" | awk '{print $1}')"
 done < <(git ls-files -- '*.Modelfile' '*.modelfile')
 
 echo
 echo "==> Repository defines ${#REPO_MODELS[@]} model(s):"
-if [[ ${#REPO_MODELS[@] -gt 0} ]]; then
+if [[ ${#REPO_MODELS[@]} -gt 0 ]]; then
     printf '%s\n' "${!REPO_MODELS[@]}" | sort | sed 's/^/    /'
 else
     echo "    NONE"
@@ -70,7 +69,6 @@ for model in "${!REPO_MODELS[@]}"; do
     current_hash="${REPO_HASHES[$model]}"
     prev_hash="${PREV_MODELS[$model]:-}"
 
-    # Check if model exists in Ollama already
     exists=false
     if ollama list | awk 'NR > 1 {print $1}' | grep -Fxq "$model"; then
         exists=true
@@ -93,7 +91,6 @@ echo
 echo "==> Cleaning stale repository models..."
 
 for prev_model in "${!PREV_MODELS[@]}"; do
-    # If it's still in the repo, keep it
     if [[ -v "REPO_MODELS[$prev_model]" ]]; then
         continue
     fi
