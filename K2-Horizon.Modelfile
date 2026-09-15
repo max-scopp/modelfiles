@@ -1,1 +1,1 @@
-FROM hf.co/IFM/K2-Horizon-7B-GGUF:latest
+FROM hf.co/IFM/K2-Horizon-7B-GGUF
